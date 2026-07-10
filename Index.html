@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>GOPD Planning</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0B1A40" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="GOPD" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=LINE+Seed+Sans+TH:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ===== Header ===== -->
+  <header class="app-header">
+    <div class="header-top">
+      <div class="logo">
+        <span class="logo-icon">SO</span>
+        <div>
+          <h1>GOPD Planning</h1>
+          <p>EGAT SO · Smart Operation</p>
+        </div>
+      </div>
+      <button class="icon-btn" aria-label="menu">☰</button>
+    </div>
+  </header>
+
+  <!-- ===== Tabs ===== -->
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="gen">
+      <span class="tab-icon">🧮</span><span>คำนวณเชื้อเพลิง</span>
+    </button>
+    <button class="tab" data-tab="rot">
+      <span class="tab-icon">🚢</span><span>การนำเข้า LNG</span>
+    </button>
+    <button class="tab" data-tab="fuel">
+      <span class="tab-icon">🔥</span><span>เชื้อเพลิง</span>
+    </button>
+    <button class="tab" data-tab="conv">
+      <span class="tab-icon">🔄</span><span>แปลงหน่วย</span>
+    </button>
+  </nav>
+
+  <!-- ===== Global Heat Rate — ตัวตั้งต้น (top bar, ใต้แท็บเมนู) ===== -->
+  <div class="hr-global hr-global-top">
+    <div class="hr-global-label">
+      <span>🔥 Heat Rate (ตัวตั้งต้น)</span>
+      <span class="hr-global-val"><span data-hr-display>6,500</span> <small>BTU/kWh</small></span>
+    </div>
+    <input type="range" id="global-hr" min="6300" max="6700" step="10" value="6500" class="hr-global-slider" />
+    <div class="hr-global-marks"><span>6,300</span><span>6,500</span><span>6,700</span></div>
+    <p class="hr-global-hint">ทุกหน้าใช้ค่านี้คำนวณเชื้อเพลิง · เปลี่ยนที่นี่ที่เดียว</p>
+  </div>
+
+  <!-- ===== Main ===== -->
+  <main class="app-body">
+
+    <!-- ========== Panel 1: เครื่องคำนวณหลัก ========== -->
+    <section class="panel active" id="panel-gen">
+      <div class="panel-header"><h2>คำนวณเชื้อเพลิงจากกำลังผลิต</h2></div>
+
+      <details class="formula-card" open>
+        <summary class="formula-summary">
+          <span class="formula-summary-title">📐 สูตรการคำนวณ</span>
+          <span class="formula-toggle">▾</span>
+        </summary>
+        <div class="formula-body">
+          <div class="formula-row">
+            <span class="formula-label">พลังงาน <small>(kWh)</small></span>
+            <span class="formula-eq">=</span>
+            <span class="formula-expr">MW × ชม. × <span class="frac"><span class="num">CF</span><span class="den">100</span></span> × 1,000</span>
+          </div>
+          <div class="formula-row">
+            <span class="formula-label">Heat Input <small>(BTU)</small></span>
+            <span class="formula-eq">=</span>
+            <span class="formula-expr">พลังงาน × <b>Heat Rate</b></span>
+          </div>
+          <div class="formula-row">
+            <span class="formula-label">ปริมาณเชื้อเพลิง</span>
+            <span class="formula-eq">=</span>
+            <span class="formula-expr"><span class="frac"><span class="num">Heat Input</span><span class="den">HHV</span></span></span>
+          </div>
+          <div class="formula-combined">
+            <div class="formula-label-mini">📌 รวมสูตรเดียว</div>
+            <div class="combined-equation">
+              <span class="combined-lhs">เชื้อเพลิง =</span>
+              <span class="frac frac-big">
+                <span class="num">MW × ชม. × <span class="frac frac-mini"><span class="num">CF</span><span class="den">100</span></span> × 1,000 × HR</span>
+                <span class="den">HHV</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <div class="fuel-calc-box">
+        <div class="fuel-calc-field">
+          <label>กำลังผลิต</label>
+          <div class="input-with-unit">
+            <input type="number" id="gen-mw" value="700" min="1" max="50000" />
+            <span class="unit">MW</span>
+          </div>
+        </div>
+
+        <label class="time-label">⏱️ ระยะเวลาการเดินเครื่อง</label>
+        <div class="time-inputs">
+          <div class="time-field"><input type="number" id="gen-days" value="30" min="0" max="365" /><span class="time-unit">วัน</span></div>
+          <div class="time-field"><input type="number" id="gen-hours" value="0" min="0" max="23" /><span class="time-unit">ชม.</span></div>
+          <div class="time-field"><input type="number" id="gen-mins" value="0" min="0" max="59" /><span class="time-unit">นาที</span></div>
+        </div>
+        <p class="time-summary">รวม: <strong id="gen-time-total">720 ชม.</strong></p>
+
+        <div class="fuel-calc-cf">
+          <label>Capacity Factor (CF)</label>
+          <div class="cf-row">
+            <input type="range" id="gen-cf" min="10" max="100" step="5" value="100" class="rot-slider" />
+            <span class="cf-value"><span id="gen-cf-val">100</span>%</span>
+          </div>
+          <p class="cf-hint">% เวลาที่เครื่องเดินจริง (Full load = 100%)</p>
+        </div>
+      </div>
+
+      <!-- ผลลัพธ์: พลังงาน + Heat Input -->
+      <div class="result-card">
+        <p class="result-label">⚡ พลังงานที่ผลิตได้</p>
+        <p class="result-value"><span id="gen-energy">504</span><span class="result-unit">ล้านหน่วย (GWh)</span></p>
+        <div class="result-breakdown">
+          <div class="breakdown-row"><span>ความร้อนที่ต้องการ (Heat Input)</span><b id="gen-heat-input">—</b></div>
+          <div class="breakdown-row"><span>เทียบเรือ LNG</span><b><span id="gen-ships">1.00</span> ลำ 🚢</b></div>
+          <div class="breakdown-row"><span>Heat Rate ที่ใช้</span><b><span data-hr-display>6,500</span> BTU/kWh</b></div>
+        </div>
+      </div>
+
+      <div class="rot-section-title">⛽ ปริมาณเชื้อเพลิง (เลือกชนิดใดชนิดหนึ่ง)</div>
+      <div class="genf-grid" id="gen-fuel-grid"></div>
+
+      <p class="fuel-options-title">⚡ เลือกขนาดด่วน</p>
+      <div class="preset-buttons">
+        <button class="preset-btn" data-mw="100" data-days="1" data-hours="0" data-minutes="0">100 MW × 1 วัน</button>
+        <button class="preset-btn" data-mw="700" data-days="0" data-hours="1" data-minutes="0">700 MW × 1 ชม.</button>
+        <button class="preset-btn" data-mw="700" data-days="30" data-hours="0" data-minutes="0">700 MW × 30 วัน</button>
+        <button class="preset-btn" data-mw="1000" data-days="30" data-hours="0" data-minutes="0">1,000 MW × 30 วัน</button>
+      </div>
+    </section>
+
+    <!-- ========== Panel 2: Rule of Thumb ========== -->
+    <section class="panel" id="panel-rot">
+      <div class="panel-header"><h2>การนำเข้า LNG · เรือ LNG</h2></div>
+
+      <div class="rot-hero">
+        <div class="rot-hero-ship"><div class="ship-container" id="ship-container">🚢</div></div>
+        <p class="rot-hero-label">เรือ LNG <span id="rot-ships-count">1.0</span> ลำ ผลิตไฟฟ้าได้</p>
+        <p class="rot-hero-val"><span id="rot-energy">462</span> <span class="rot-hero-unit">ล้านหน่วย</span></p>
+        <p class="rot-hero-sub">= <span id="rot-mw">641</span> MW × 30 วัน · อ้างอิง HR <span data-hr-display>6,500</span></p>
+      </div>
+
+      <div class="rot-slider-box">
+        <div class="rot-slider-label">
+          <span>🚢 จำนวนเรือ LNG</span>
+          <span class="rot-slider-val"><span id="rot-ships">1.0</span> ลำ</span>
+        </div>
+        <input type="range" id="rot-ships-input" min="0.1" max="10" step="0.1" value="1.0" class="rot-slider" />
+        <div class="rot-slider-marks"><span>0.1</span><span>5</span><span>10 ลำ</span></div>
+      </div>
+
+      <div class="rot-section-title">⛽ ใช้เชื้อเพลิงที่ HR ปัจจุบัน <span data-hr-display>6,500</span> BTU/kWh</div>
+      <div class="rot-equiv">
+        <div class="rot-equiv-card">
+          <div class="rot-equiv-icon-box"><span class="rot-equiv-icon float-anim">🚢</span></div>
+          <div class="rot-equiv-info"><p class="rot-equiv-name">LNG <span class="rot-lng-ships-tag">(≈ <span id="rot-lng-ships">1.00</span> ลำ)</span></p><p class="rot-equiv-num"><span id="rot-lng">3,000</span></p><p class="rot-equiv-unit">พันล้าน BTU</p></div>
+        </div>
+        <div class="rot-equals">≈</div>
+        <div class="rot-equiv-card">
+          <div class="rot-equiv-icon-box coal"><span class="rot-equiv-icon">⛰️</span></div>
+          <div class="rot-equiv-info"><p class="rot-equiv-name">ถ่านหิน (แม่เมาะ)</p><p class="rot-equiv-num"><span id="rot-coal">0.248</span></p><p class="rot-equiv-unit">ล้านตัน</p></div>
+        </div>
+        <div class="rot-equals">≈</div>
+        <div class="rot-equiv-card">
+          <div class="rot-equiv-icon-box oil"><span class="rot-equiv-icon">⛽</span></div>
+          <div class="rot-equiv-info"><p class="rot-equiv-name">น้ำมันดีเซล</p><p class="rot-equiv-num"><span id="rot-diesel">82</span></p><p class="rot-equiv-unit">ล้านลิตร</p></div>
+        </div>
+        <div class="rot-equals">≈</div>
+        <div class="rot-equiv-card">
+          <div class="rot-equiv-icon-box oil-heavy"><span class="rot-equiv-icon">🛢️</span></div>
+          <div class="rot-equiv-info"><p class="rot-equiv-name">น้ำมันเตา</p><p class="rot-equiv-num"><span id="rot-fueloil">76</span></p><p class="rot-equiv-unit">ล้านลิตร</p></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========== Panel 3: เปรียบเทียบเชื้อเพลิง ========== -->
+    <section class="panel" id="panel-fuel">
+      <div class="panel-header"><h2>เปรียบเทียบเชื้อเพลิง</h2></div>
+      <div class="fuel-grid" id="fuel-grid"></div>
+
+      <div class="conv-ref-box">
+        <p class="conv-ref-title">📋 ค่า HHV อ้างอิง (ใช้ในการคำนวณ)</p>
+        <div class="conv-ref-table">
+          <div class="conv-ref-row"><span>ก๊าซธรรมชาติ</span><span>1,000 BTU/SCF</span></div>
+          <div class="conv-ref-row"><span>น้ำมันดีเซล</span><span>36,500 BTU/L</span></div>
+          <div class="conv-ref-row"><span>น้ำมันเตา (FO)</span><span>39,500 BTU/L</span></div>
+          <div class="conv-ref-row"><span>BLCP Coal</span><span>25.07 MBTU/Ton</span></div>
+          <div class="conv-ref-row"><span>GOC Coal</span><span>22.25 MBTU/Ton</span></div>
+          <div class="conv-ref-row"><span>HSA Coal</span><span>9.64 MBTU/Ton</span></div>
+          <div class="conv-ref-row"><span>MM Coal (แม่เมาะ)</span><span>12.09 MBTU/Ton</span></div>
+        </div>
+        <p class="conv-ref-note">MBTU = 1,000,000 BTU · SCF = Standard Cubic Foot</p>
+      </div>
+    </section>
+
+    <!-- ========== Panel 4: แปลงหน่วย ========== -->
+    <section class="panel" id="panel-conv">
+      <div class="panel-header"><h2>ตัวแปลงหน่วยพลังงาน</h2></div>
+
+      <div class="conv-box">
+        <label>จาก</label>
+        <div class="conv-input-row">
+          <input type="number" id="conv-in" value="1000" />
+          <select id="conv-from">
+            <option value="kwh">kWh</option><option value="mwh">MWh</option><option value="gwh">GWh</option>
+            <option value="mmbtu">MMBTU</option><option value="kcal">kcal</option><option value="mj">MJ</option>
+            <option value="gj">GJ</option><option value="toe">TOE</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="swap-btn-full" id="swap" aria-label="สลับหน่วย">⇅ สลับหน่วย</button>
+
+      <div class="conv-box">
+        <label>เป็น</label>
+        <div class="conv-input-row">
+          <input type="text" id="conv-out" readonly />
+          <select id="conv-to">
+            <option value="kwh">kWh</option><option value="mwh">MWh</option><option value="gwh">GWh</option>
+            <option value="mmbtu" selected>MMBTU</option><option value="kcal">kcal</option><option value="mj">MJ</option>
+            <option value="gj">GJ</option><option value="toe">TOE</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="result-card light">
+        <p class="result-label">ผลการแปลง</p>
+        <p class="conv-summary" id="conv-summary">1,000 kWh = 3.412 MMBTU</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <span id="online-status" class="status-online">Online · พร้อมใช้งาน</span>
+    <span>GOPD Team · v2.0</span>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const reg = await navigator.serviceWorker.register('sw.js');
+          reg.update();
+        } catch (err) { console.log('[App] SW failed:', err); }
+      });
+    }
+    function updateOnlineStatus() {
+      const el = document.getElementById('online-status');
+      if (!el) return;
+      if (navigator.onLine) { el.textContent = 'Online · พร้อมใช้งาน'; el.className = 'status-online'; }
+      else { el.textContent = 'Offline · ใช้งานจาก cache'; el.className = 'status-offline'; }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    window.addEventListener('load', updateOnlineStatus);
+  </script>
+</body>
+</html>

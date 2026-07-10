@@ -1,9 +1,9 @@
-// ===== Service Worker v17 — Network First (dev-friendly) =====
+// ===== Service Worker v18 — Network First (dev-friendly) =====
 // HTML/CSS/JS = network first (เห็นการแก้ทันที, ออฟไลน์ใช้ cache)
 // รูป/manifest = cache first (โหลดเร็ว)
-const CACHE_NAME = 'gopd-app-v17';
+const CACHE_NAME = 'gopd-app-v18';
 const FILES_TO_CACHE = [
-  './', './index.html', './styles.css', './app.js',
+  './', './index.html', './styles.css', './app.js', './auth.js',
   './manifest.json', './icon-192.png', './icon-512.png'
 ];
 

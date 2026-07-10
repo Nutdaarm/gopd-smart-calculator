@@ -127,8 +127,22 @@ async function exchangeCodeForToken(code) {
 }
 
 function logout() {
+  const session = getSession();
+  const idToken = session && session.id_token;
   clearSession();
-  window.location.href = window.location.pathname; // กลับหน้า login สะอาดๆ
+
+  if (idToken) {
+    // สำคัญ: ต้องยิงไปที่ /oidc/2/logout ของ OneLogin ด้วย
+    // ไม่งั้น OneLogin ยังจำ SSO session ไว้ กด login ใหม่จะเข้าได้เลยโดยไม่ถาม password
+    const params = new URLSearchParams({
+      post_logout_redirect_uri: AUTH_CONFIG.redirectUri,
+      id_token_hint: idToken,
+      logout: 'true', // ปิด SSO session ของ OneLogin ด้วย ไม่ใช่แค่ revoke token ของแอปนี้
+    });
+    window.location.href = `${AUTH_BASE}/logout?${params.toString()}`;
+  } else {
+    window.location.href = AUTH_CONFIG.redirectUri;
+  }
 }
 
 // ---------- UI wiring ----------
